@@ -4,7 +4,10 @@ using UnityEngine;
 
 public class SceneController : MonoBehaviour
 {
-    void Start()
+    [SerializeField] float _enemySpawnTime;
+	[SerializeField] float _gameSessionTime;
+
+	void Start()
     {
         
     }
