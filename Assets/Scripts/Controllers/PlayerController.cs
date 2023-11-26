@@ -12,6 +12,11 @@ public class PlayerController : MonoBehaviour
     [SerializeField] float _playerVelocity;
     [SerializeField] float _rotationSpeed;
     [SerializeField] int sideTripleShootDelay;
+	[Space]
+	[Header("Collision Settings")]
+	[Space]
+	[SerializeField] float _raycastRangeDetection;
+    [SerializeField] LayerMask raycastMask;
 
 	void Start()
     {
@@ -28,7 +33,7 @@ public class PlayerController : MonoBehaviour
     {
 		float direction = Input.GetAxisRaw("Vertical");
 
-		if (direction > 0) 
+		if (direction > 0 && !DetectFowardCollision()) 
         {
             Vector3 playerPosition = _shipTransform.position;
             transform.position = playerPosition + (_shipTransform.up * _playerVelocity * Time.deltaTime);
@@ -47,14 +52,14 @@ public class PlayerController : MonoBehaviour
     }
     void Attack()
     {
-        if (Input.GetKeyDown("Fire1"))
+        if (Input.GetAxis("Fire1") != 0)
         {
-
+            Debug.Log("Mouse0");
         }
-        if (Input.GetKeyDown("Fire1"))
+        if (Input.GetAxis("Fire2") != 0)
         {
-
-        }
+			Debug.Log("Mouse1");
+		}
     }
     public float GetPlayerHealth()
     {
@@ -64,4 +69,18 @@ public class PlayerController : MonoBehaviour
     {
         PlayerHealth -= amount;
     }
+    public bool DetectFowardCollision()
+    {
+        RaycastHit2D hit = Physics2D.Raycast(_shipTransform.position, _shipTransform.up, _raycastRangeDetection, raycastMask);
+        if (hit)
+        {
+			return true;
+        }
+        return false;
+    }
+	private void OnDrawGizmos()
+	{
+		Gizmos.color = Color.yellow;
+        Gizmos.DrawLine(_shipTransform.position,transform.position + _shipTransform.up * _raycastRangeDetection);
+	}
 }

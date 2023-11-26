@@ -2,27 +2,89 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+using TMPro;
 
 public class ButtonsHandler : MonoBehaviour
 {
-    [SerializeField] Transform canvasTransformReference;
-    [SerializeField] GameObject faderOutInObject;
-    public void QuitGame()
+    [SerializeField] Transform _canvasTransformReference;
+    [SerializeField] GameObject _faderOutObject;
+	[SerializeField] GameObject _faderInObject;
+	GameObject ObjectToActivate;
+	bool _canClickOnButtons = true;
+
+	public void SetActiveObjectWithTransition(GameObject gameObject)
     {
-        Application.Quit();
-    }
-    public void ChangeScene(string scenename)
+		if (_canClickOnButtons)
+		{
+			_canClickOnButtons = false;
+			StartCoroutine(Transition(gameObject));
+		}
+	}
+	public void DelayedSetActiveObject(GameObject gameObject, float delay = 0)
+	{
+		if (_canClickOnButtons)
+		{
+			_canClickOnButtons = false;
+			StartCoroutine(SetActiveDelay(gameObject, delay));
+		}
+	}
+	public void ChangeScene(string scenename)
     {
         SceneManager.LoadScene(scenename);
     }
     public void ChangeSceneWithTransition(string scenename)
     {
-        StartCoroutine(Transition(scenename));
+		if (_canClickOnButtons)
+		{
+			_canClickOnButtons = false;
+			StartCoroutine(Transition(scenename));
+		}
 	}
-    public IEnumerator Transition(string scenename)
+	public IEnumerator SetActiveDelay(GameObject gameObject,float delay)
+	{
+		yield return new WaitForSeconds(delay);
+		if (gameObject.activeSelf)
+		{
+			gameObject.SetActive(false);
+		}
+		else
+		{
+			gameObject.SetActive(true);
+		}
+		_canClickOnButtons = true;
+	}
+	public IEnumerator Transition(string scenename)
     {
-        Animator faderAnimator = Instantiate(faderOutInObject, canvasTransformReference).GetComponentInChildren<Animator>();
+        Animator faderAnimator = Instantiate(_faderOutObject, _canvasTransformReference).GetComponentInChildren<Animator>();
         yield return new WaitForSeconds(faderAnimator.GetCurrentAnimatorClipInfo(0).Length);
-        ChangeScene(scenename);
+		_canClickOnButtons = true;
+		ChangeScene(scenename);
+	}
+	public IEnumerator Transition(GameObject gameObject)
+	{
+		float errorTimeOfset = 0.2f;
+		Animator faderOutAnimator = Instantiate(_faderOutObject, _canvasTransformReference).GetComponentInChildren<Animator>();
+		yield return new WaitForSeconds(faderOutAnimator.GetCurrentAnimatorClipInfo(0).Length - errorTimeOfset);
+		Instantiate(this._faderInObject, _canvasTransformReference);
+		ObjectToActivate.SetActive(true);
+
+		if (gameObject.activeSelf)
+		{
+			gameObject.SetActive(false);
+		}
+		else
+		{
+			gameObject.SetActive(true);
+		}
+		_canClickOnButtons = true;
+	}
+	public void SaveInputFieldData(TMP_InputField inputField)
+    {
+        PlayerPrefs.SetFloat(inputField.name, float.Parse(inputField.text));
     }
+	public void SetObjectToActivate(GameObject gameObject)
+	{
+		ObjectToActivate = gameObject;
+	}
 }
