@@ -2,44 +2,34 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using UnityEngine;
 
 public class CanonBall : MonoBehaviour
 {
 	[SerializeField] ContactFilter2D contactFilter;
 	[SerializeField] GameObject explosionPrefab;
-	Ship ship;
-	public string launchedShipName;
+	public int bombDamage;
+	public string shiplauncherName;
+
+	private void Start()
+	{
+		Invoke("Explode",2.5f);
+	}
 	private void OnTriggerEnter2D(Collider2D coll)
 	{
-		GetColidedShip(coll);
-		if (!ship.gameObject.name.Equals(launchedShipName))
+		Task.Delay(1000);
+		if (!coll.name.Equals(shiplauncherName))
 		{
+			if (!coll.gameObject.layer.Equals(6))
+			{
+				coll.GetComponent<Ship>().GetDamage(bombDamage);
+			}
 			Explode();
-		}
-	}
-	void GetColidedShip(Collider2D coll)
-	{
-		if (coll.GetComponent<Collider2D>().GetComponent<Ship>())
-		{
-			Ship ship = null;
-			if (coll.GetComponent<Collider2D>().GetComponent<EnemyShipController>())
-			{
-				ship = (EnemyShipController)coll.GetComponent<Collider2D>().GetComponent<Ship>();
-			}
-			else if (coll.GetComponent<Collider2D>().GetComponent<PlayerController>())
-			{
-				ship = (PlayerController)coll.GetComponent<Collider2D>().GetComponent<Ship>();
-			}
-			if (ship != null)
-			{
-				this.ship = ship;
-			}
 		}
 	}
 	void Explode()
 	{
-		ship.GetDamage();
 		Instantiate(explosionPrefab,transform.position,Quaternion.identity);
 		Destroy(gameObject);
 	}

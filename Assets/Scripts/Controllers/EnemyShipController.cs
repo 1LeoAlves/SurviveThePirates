@@ -1,24 +1,29 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 
 public class EnemyShipController : Ship
 {
+	[SerializeField] GameObject explosionPrefab;
+	[SerializeField] Transform _shipTransform;
+	[SerializeField] GameObject _attackPrefab;
+	[SerializeField] SpriteRenderer _sailSpriteRenderer, _shipSpriteRenderer;
+	[Space]
 	[Header("Player Settings")]
 	[Space]
 	[Range(0, 100)]
-	[SerializeField] float shipHealth;
-	[SerializeField] Transform _shipTransform;
-	[SerializeField] GameObject _attackPrefab;
+	[SerializeField] float _shipHealth;
 	[SerializeField] float _shipSpeed;
 	[SerializeField] float _rotationSpeed;
-	[SerializeField] int sideTripleShootDelay;
+	[SerializeField] int _sideTripleShootDelay;
 	[Space]
 	[Header("Attack Settings")]
 	[Space]
-	[SerializeField] float attackSpeed;
-	[SerializeField] int FowardattackRate;
-	[SerializeField] int SideWaysattackRate;
+	[SerializeField] int _attackDamage;
+	[SerializeField] float _attackSpeed;
+	[SerializeField] int _fowardattackRate;
+	[SerializeField] int _sideattackRate;
 	[Space]
 	[Header("Collision Settings")]
 	[Space]
@@ -33,12 +38,17 @@ public class EnemyShipController : Ship
     void Update()
     {
     }
-    public override void GetDamage()
+    public override void GetDamage(float amount)
     {
-		Debug.Log("A");
-    }
+		_shipHealth -= amount;
+	}
 	public override float GetShipHealth()
 	{
-		return shipHealth;
+		return _shipHealth;
+	}
+	public override void Die()
+	{
+		Instantiate(explosionPrefab,_shipTransform.position,Quaternion.identity);
+		Destroy(gameObject);
 	}
 }

@@ -6,21 +6,24 @@ using UnityEngine;
 
 public class PlayerController : Ship
 {
+	[SerializeField] GameObject explosionPrefab;
+	[SerializeField] Transform _shipTransform;
+	[SerializeField] GameObject _attackPrefab;
+    [SerializeField] SpriteRenderer _sailSpriteRenderer,_shipSpriteRenderer;
+	[Space]
 	[Header("Player Settings")]
 	[Space]
 	[Range(0, 100)]
-    [SerializeField] float shipHealth;
-    [SerializeField] Transform _shipTransform;
-    [SerializeField] GameObject _attackPrefab;
-    [SerializeField] float _shipSpeed;
+    [SerializeField] float _shipHealth;
+	[SerializeField] float _shipSpeed;
     [SerializeField] float _rotationSpeed;
-    [SerializeField] int sideTripleShootDelay;
-	[Space]
-	[Header("Attack Settings")]
-	[Space]
-	[SerializeField] float attackSpeed;
-	[SerializeField] int FowardattackRate;
-	[SerializeField] int SideWaysattackRate;
+    [Space]
+    [Header("Attack Settings")]
+    [Space]
+    [SerializeField] int _attackDamage;
+	[SerializeField] float _attackSpeed;
+	[SerializeField] int _fowardattackRate;
+	[SerializeField] int _sideattackRate;
 
 	[Space]
 	[Header("Collision Settings")]
@@ -29,10 +32,6 @@ public class PlayerController : Ship
     [SerializeField] LayerMask raycastMask;
 
     bool canAttackFoward = true, canAttackSideWays = true;
-	void Start()
-    {
-        
-    }
 
     void Update()
     {
@@ -40,6 +39,7 @@ public class PlayerController : Ship
         Rotate();
 		FowardAttack();
         SideAttack();
+        ControlShipState();
 	}
     void Movement()
     {
@@ -68,14 +68,15 @@ public class PlayerController : Ship
         {
             canAttackFoward = false;
             _attackPrefab.hideFlags = HideFlags.HideInHierarchy;
-			
-            GameObject CanonBomb = Instantiate(_attackPrefab, _shipTransform.position, _shipTransform.rotation);
-            CanonBomb.GetComponent<CanonBall>().launchedShipName = name;
+			GameObject CanonBomb = Instantiate(_attackPrefab,new Vector2(_shipTransform.position.x,_shipTransform.position.y), _shipTransform.rotation);
+			CanonBall canonball = CanonBomb.GetComponent<CanonBall>();
+			canonball.shiplauncherName = name;
+			canonball.bombDamage = _attackDamage;
 
 			Rigidbody2D CanonBombRigid = CanonBomb.GetComponent<Rigidbody2D>();
-			CanonBombRigid.AddForce(_shipTransform.up * attackSpeed,ForceMode2D.Impulse);
+			CanonBombRigid.AddForce(_shipTransform.up * _attackSpeed,ForceMode2D.Impulse);
 			
-            await Task.Delay(SecondsToMiliseconds(FowardattackRate));
+            await Task.Delay(SecondsToMiliseconds(_fowardattackRate));
 			canAttackFoward = true;
 		}
     }
@@ -85,19 +86,32 @@ public class PlayerController : Ship
 		{
             canAttackSideWays = false;
 
+			_attackPrefab.hideFlags = HideFlags.HideInHierarchy;
+			Debug.Log("A");
+			for (int i = -1; i < 2; i++)
+            {
+				Debug.Log("B");
+				GameObject CanonBomb = Instantiate(_attackPrefab, new Vector2(_shipTransform.position.x, _shipTransform.position.y + i), _shipTransform.rotation);
+				CanonBall canonball = CanonBomb.GetComponent<CanonBall>();
+				canonball.shiplauncherName = name;
+                canonball.bombDamage = _attackDamage;
 
-			await Task.Delay(SecondsToMiliseconds(SideWaysattackRate));
+				Rigidbody2D CanonBombRigid = CanonBomb.GetComponent<Rigidbody2D>();
+				CanonBombRigid.AddForce(_shipTransform.right * _attackSpeed, ForceMode2D.Impulse);
+			}
+
+			await Task.Delay(SecondsToMiliseconds(_sideattackRate));
 			canAttackSideWays = true;
 		}
         
 	}
     public override float GetShipHealth()
     {
-        return shipHealth;
+        return _shipHealth;
     }
-    public void GetDamage(float amount)
+    public override void GetDamage(float amount)
     {
-        shipHealth -= amount;
+        _shipHealth -= amount;
     }
     public bool DetectFowardCollision()
     {
@@ -111,6 +125,32 @@ public class PlayerController : Ship
     public int SecondsToMiliseconds(int seconds)
     {
         return seconds * 1000;
+    }
+    void ControlShipState()
+    {
+        if(_shipHealth >= 75 && _shipHealth <= 100)
+        {
+			_shipSpriteRenderer.sprite = shipParts[0];
+            _sailSpriteRenderer.sprite = sailsParts[0];
+		}
+        else if (_shipHealth >= 35 & _shipHealth < 75)
+        {
+			_shipSpriteRenderer.sprite = shipParts[1];
+			_sailSpriteRenderer.sprite = sailsParts[0];
+		}
+		else if (_shipHealth >= 10 && _shipHealth < 35)
+        {
+			_shipSpriteRenderer.sprite = shipParts[2];
+			_sailSpriteRenderer.sprite = sailsParts[1];
+		}
+		else
+        {
+            Die();
+        }
+	}
+    public override void Die()
+    {
+        Destroy(gameObject);
     }
 	private void OnDrawGizmos()
 	{
