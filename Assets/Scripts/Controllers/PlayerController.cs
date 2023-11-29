@@ -1,23 +1,34 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 
-public class PlayerController : MonoBehaviour
+public class PlayerController : Ship
 {
 	[Header("Player Settings")]
 	[Space]
 	[Range(0, 100)]
-    [SerializeField] float PlayerHealth;
+    [SerializeField] float shipHealth;
     [SerializeField] Transform _shipTransform;
-    [SerializeField] float _playerVelocity;
+    [SerializeField] GameObject _attackPrefab;
+    [SerializeField] float _shipSpeed;
     [SerializeField] float _rotationSpeed;
     [SerializeField] int sideTripleShootDelay;
+	[Space]
+	[Header("Attack Settings")]
+	[Space]
+	[SerializeField] float attackSpeed;
+	[SerializeField] int FowardattackRate;
+	[SerializeField] int SideWaysattackRate;
+
 	[Space]
 	[Header("Collision Settings")]
 	[Space]
 	[SerializeField] float _raycastRangeDetection;
     [SerializeField] LayerMask raycastMask;
 
+    bool canAttackFoward = true, canAttackSideWays = true;
 	void Start()
     {
         
@@ -27,7 +38,8 @@ public class PlayerController : MonoBehaviour
     {
         Movement();
         Rotate();
-        Attack();
+		FowardAttack();
+        SideAttack();
 	}
     void Movement()
     {
@@ -36,7 +48,7 @@ public class PlayerController : MonoBehaviour
 		if (direction > 0 && !DetectFowardCollision()) 
         {
             Vector3 playerPosition = _shipTransform.position;
-            transform.position = playerPosition + (_shipTransform.up * _playerVelocity * Time.deltaTime);
+            transform.position = playerPosition + (_shipTransform.up * _shipSpeed * Time.deltaTime);
         }
     }
     void Rotate()
@@ -50,24 +62,42 @@ public class PlayerController : MonoBehaviour
 			_shipTransform.eulerAngles = newEulerAngles;
         }
     }
-    void Attack()
+    async void FowardAttack()
     {
-        if (Input.GetAxis("Fire1") != 0)
+        if (Input.GetAxis("Fire1") != 0 && canAttackFoward)
         {
-            Debug.Log("Mouse0");
-        }
-        if (Input.GetAxis("Fire2") != 0)
-        {
-			Debug.Log("Mouse1");
+            canAttackFoward = false;
+            _attackPrefab.hideFlags = HideFlags.HideInHierarchy;
+			
+            GameObject CanonBomb = Instantiate(_attackPrefab, _shipTransform.position, _shipTransform.rotation);
+            CanonBomb.GetComponent<CanonBall>().launchedShipName = name;
+
+			Rigidbody2D CanonBombRigid = CanonBomb.GetComponent<Rigidbody2D>();
+			CanonBombRigid.AddForce(_shipTransform.up * attackSpeed,ForceMode2D.Impulse);
+			
+            await Task.Delay(SecondsToMiliseconds(FowardattackRate));
+			canAttackFoward = true;
 		}
     }
-    public float GetPlayerHealth()
+	async void SideAttack()
     {
-        return PlayerHealth;
+		if (Input.GetAxis("Fire2") != 0 && canAttackSideWays)
+		{
+            canAttackSideWays = false;
+
+
+			await Task.Delay(SecondsToMiliseconds(SideWaysattackRate));
+			canAttackSideWays = true;
+		}
+        
+	}
+    public override float GetShipHealth()
+    {
+        return shipHealth;
     }
     public void GetDamage(float amount)
     {
-        PlayerHealth -= amount;
+        shipHealth -= amount;
     }
     public bool DetectFowardCollision()
     {
@@ -77,6 +107,10 @@ public class PlayerController : MonoBehaviour
 			return true;
         }
         return false;
+    }
+    public int SecondsToMiliseconds(int seconds)
+    {
+        return seconds * 1000;
     }
 	private void OnDrawGizmos()
 	{

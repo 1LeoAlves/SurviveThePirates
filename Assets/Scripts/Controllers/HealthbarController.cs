@@ -5,19 +5,19 @@ using UnityEngine.UI;
 
 public class HealthbarController : MonoBehaviour
 {
-	PlayerController _playerController;
+	Ship _controller;
 	[SerializeField] Slider _healthBarSlider;
 
 	private void Start()
 	{
-		_playerController = transform.parent.GetComponent<PlayerController>();
+		_controller = transform.parent.GetComponent<Ship>();
 	}
 	private void Update()
 	{
-		ControlHealthbarSize();
+		UpdateHealthbar();
 	}
-	void ControlHealthbarSize()
+	void UpdateHealthbar()
 	{
-		_healthBarSlider.value = _playerController.GetPlayerHealth();
+		_healthBarSlider.value = _controller.GetShipHealth();
 	}
 }
