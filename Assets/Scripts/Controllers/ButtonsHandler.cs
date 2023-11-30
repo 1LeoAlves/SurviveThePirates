@@ -10,6 +10,7 @@ public class ButtonsHandler : MonoBehaviour
     [SerializeField] Transform _canvasTransformReference;
     [SerializeField] GameObject _faderOutObject;
 	[SerializeField] GameObject _faderInObject;
+	[SerializeField] List<TMP_InputField> inputFields;
 	GameObject ObjectToActivate;
 	bool _canClickOnButtons = true;
 
@@ -57,7 +58,7 @@ public class ButtonsHandler : MonoBehaviour
 	public IEnumerator Transition(string scenename)
     {
         Animator faderAnimator = Instantiate(_faderOutObject, _canvasTransformReference).GetComponentInChildren<Animator>();
-        yield return new WaitForSeconds(faderAnimator.GetCurrentAnimatorClipInfo(0).Length);
+        yield return new WaitForSeconds(faderAnimator.GetCurrentAnimatorClipInfo(0).Length - 0.25f);
 		_canClickOnButtons = true;
 		ChangeScene(scenename);
 	}
@@ -86,5 +87,34 @@ public class ButtonsHandler : MonoBehaviour
 	public void SetObjectToActivate(GameObject gameObject)
 	{
 		ObjectToActivate = gameObject;
+	}
+	public void SaveConfig() 
+	{
+		if(inputFields[0].text != string.Empty)
+		{
+			float value = float.Parse(inputFields[0].text.Trim());
+			if(value >= 1 && value <= 3)
+			{
+				PlayerPrefs.SetFloat("GameSessionTime", value);
+			}
+			else
+			{
+				DefaultConfig();
+			}
+		}
+		else
+		{
+			DefaultConfig();
+		}
+		if (inputFields[1].text != string.Empty)
+		{
+			float value = float.Parse(inputFields[1].text.Trim());
+			PlayerPrefs.SetFloat("EnemySpawnRate", value);
+		}
+	}
+	void DefaultConfig()
+	{
+		PlayerPrefs.SetFloat("GameSessionTime", 3);
+		inputFields[0].text = "3";
 	}
 }

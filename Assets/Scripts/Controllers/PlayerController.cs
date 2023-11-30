@@ -3,13 +3,14 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class PlayerController : Ship
 {
 	[SerializeField] GameObject explosionPrefab;
 	[SerializeField] Transform _shipTransform;
-	[SerializeField] GameObject _attackPrefab, tripleAttackPrefab;
+	[SerializeField] GameObject _attackPrefab, _tripleAttackPrefab;
     [SerializeField] SpriteRenderer _sailSpriteRenderer,_shipSpriteRenderer;
 	[SerializeField] ParticleSystem particleSys;
 	[Space]
@@ -20,7 +21,6 @@ public class PlayerController : Ship
 	[SerializeField] float _shipSpeed;
     [SerializeField] float _rotationSpeed;
 	[SerializeField] ShipStatus shipStatus;
-
 	[Space]
     [Header("Attack Settings")]
     [Space]
@@ -28,7 +28,6 @@ public class PlayerController : Ship
 	[SerializeField] float _attackSpeed;
 	[SerializeField] int _fowardattackRate;
 	[SerializeField] int _sideattackRate;
-
 	[Space]
 	[Header("Collision Settings")]
 	[Space]
@@ -63,7 +62,7 @@ public class PlayerController : Ship
 
 		if (rotationDirection != 0 && !hasDied)
         {
-            Vector3 newEulerAngles = new Vector3(_shipTransform.eulerAngles.x, _shipTransform.eulerAngles.y, _shipTransform.eulerAngles.z + (_rotationSpeed * rotationDirection));
+            Vector3 newEulerAngles = new Vector3(_shipTransform.eulerAngles.x, _shipTransform.eulerAngles.y, _shipTransform.eulerAngles.z + (_rotationSpeed * rotationDirection * Time.deltaTime));
 			_shipTransform.eulerAngles = newEulerAngles;
         }
     }
@@ -81,69 +80,36 @@ public class PlayerController : Ship
 			Rigidbody2D CanonBombRigid = CanonBomb.GetComponent<Rigidbody2D>();
 			CanonBombRigid.AddForce(_shipTransform.up * _attackSpeed,ForceMode2D.Impulse);
 			
-            await Task.Delay(SecondsToMiliseconds(_fowardattackRate));
+            await Task.Delay(SceneController.SecondsToMiliseconds(_fowardattackRate));
 			canAttackFoward = true;
 		}
     }
-	/*async void SideAttack()
-    {
-		if (Input.GetAxis("Fire2") != 0 && canAttackSideWays && !hasDied)
-		{
-            canAttackSideWays = false;
-
-			_attackPrefab.hideFlags = HideFlags.HideInHierarchy;
-			for (int i = -1; i < 2; i++)
-            {
-				GameObject CanonBomb = Instantiate(_attackPrefab, new Vector2(_shipTransform.position.x, _shipTransform.position.y + i), _shipTransform.rotation);
-				CanonBall canonball = CanonBomb.GetComponent<CanonBall>();
-				canonball.shiplauncherName = name;
-                canonball.bombDamage = _attackDamage;
-
-				Rigidbody2D CanonBombRigid = CanonBomb.GetComponent<Rigidbody2D>();
-				CanonBombRigid.AddForce(_shipTransform.right * _attackSpeed, ForceMode2D.Impulse);
-			}
-
-			await Task.Delay(SecondsToMiliseconds(_sideattackRate));
-			canAttackSideWays = true;
-		}
-        
-	}*/
 	async void SideAttack()
     {
 		if (Input.GetAxis("Fire2") != 0 && canAttackSideWays && !hasDied)
 		{
             canAttackSideWays = false;
 
-			_attackPrefab.hideFlags = HideFlags.HideInHierarchy;
+			GameObject TripleAttackGameObject = _tripleAttackPrefab;
+			CanonBall[] canonBalls = TripleAttackGameObject.GetComponentsInChildren<CanonBall>();
 
-			GameObject TripleAttackGameObject = Instantiate(tripleAttackPrefab, transform.position, _shipTransform.rotation);
-			List<GameObject> canonBalls = new List<GameObject>();
-			GameObject[] canonBallsRigid = canonBalls.Select(x => x.GetComponent<GameObject>()).ToArray();
-
-			foreach (GameObject CanonBombObject in canonBallsRigid)
+			foreach (CanonBall canonball in canonBalls)
 			{
-				CanonBall canonball = CanonBombObject.GetComponent<CanonBall>();
 				canonball.shiplauncherName = name;
 				canonball.bombDamage = _attackDamage;
-
-				Rigidbody2D CanonBombRigid = CanonBombObject.GetComponent<Rigidbody2D>();
+			}
+			TripleAttackGameObject = Instantiate(TripleAttackGameObject, transform.position, _shipTransform.rotation);
+			CanonBall[] launchedcanonBalls = TripleAttackGameObject.GetComponentsInChildren<CanonBall>();
+			foreach (CanonBall canonball in launchedcanonBalls)
+			{
+				Rigidbody2D CanonBombRigid = canonball.gameObject.GetComponent<Rigidbody2D>();
 				CanonBombRigid.AddForce(_shipTransform.right * _attackSpeed, ForceMode2D.Impulse);
 			}
-			/*for (int i = -1; i < 2; i++)
-            {
-				GameObject CanonBomb = Instantiate(_attackPrefab, new Vector2(_shipTransform.position.x, _shipTransform.position.y + i), _shipTransform.rotation);
-				CanonBall canonball = CanonBomb.GetComponent<CanonBall>();
-				canonball.shiplauncherName = name;
-                canonball.bombDamage = _attackDamage;
 
-				Rigidbody2D CanonBombRigid = CanonBomb.GetComponent<Rigidbody2D>();
-				CanonBombRigid.AddForce(_shipTransform.right * _attackSpeed, ForceMode2D.Impulse);
-			}*/
-
-			await Task.Delay(SecondsToMiliseconds(_sideattackRate));
+			await Task.Delay(SceneController.SecondsToMiliseconds(_sideattackRate));
+			Destroy(TripleAttackGameObject.gameObject);
 			canAttackSideWays = true;
 		}
-        
 	}
     public override float GetShipHealth()
     {
@@ -161,10 +127,6 @@ public class PlayerController : Ship
 			return true;
         }
         return false;
-    }
-    public int SecondsToMiliseconds(int seconds)
-    {
-        return seconds * 1000;
     }
     void ControlShipState()
     {
@@ -220,12 +182,8 @@ public class PlayerController : Ship
 	{
 		particleSys.Play();
 		await Task.Delay(5000);
-		Destroy(gameObject);
-	}
-	private void OnDrawGizmos()
-	{
-		Gizmos.color = Color.yellow;
-        Gizmos.DrawLine(_shipTransform.position,transform.position + _shipTransform.up * _raycastRangeDetection);
+		if(!gameObject.IsUnityNull())
+			Destroy(gameObject);
 	}
 }
 

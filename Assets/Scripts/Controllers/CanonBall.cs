@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class CanonBall : MonoBehaviour
@@ -18,12 +19,18 @@ public class CanonBall : MonoBehaviour
 	}
 	private void OnTriggerEnter2D(Collider2D coll)
 	{
-		Task.Delay(1000);
+		CheckCollision(coll);
+	}
+	void CheckCollision(Collider2D coll)
+	{
 		if (!coll.name.Equals(shiplauncherName))
 		{
 			if (!coll.gameObject.layer.Equals(6))
 			{
-				coll.GetComponent<Ship>().GetDamage(bombDamage);
+				if (!coll.gameObject.IsUnityNull())
+				{
+					coll.GetComponent<Ship>().GetDamage(bombDamage);
+				}
 			}
 			Explode();
 		}
