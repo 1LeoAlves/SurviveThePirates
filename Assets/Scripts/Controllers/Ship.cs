@@ -13,8 +13,4 @@ public abstract class Ship : MonoBehaviour
 	{
 		return 0;
 	}
-	public virtual void Die()
-	{
-		Destroy(gameObject);
-	}
 }

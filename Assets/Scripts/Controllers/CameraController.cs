@@ -12,10 +12,13 @@ public class CameraController : MonoBehaviour
 	}
     void FollowTarget()
     {
-        float cameraZAxisPos = transform.position.z;
-        Vector3 actualPosition = transform.position;
-        Vector3 newPosition = new Vector3(_target.position.x, _target.position.y, cameraZAxisPos);
-		transform.position = Vector3.Slerp(actualPosition, newPosition, Time.deltaTime * _followVelocity);
+        if (_target != null)
+        {
+            float cameraZAxisPos = transform.position.z;
+            Vector3 actualPosition = transform.position;
+            Vector3 newPosition = new Vector3(_target.position.x, _target.position.y, cameraZAxisPos);
+            transform.position = Vector3.Slerp(actualPosition, newPosition, Time.deltaTime * _followVelocity);
+        }
     }
     public Transform GetTarget()
     {

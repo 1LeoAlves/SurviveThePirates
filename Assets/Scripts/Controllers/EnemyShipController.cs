@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
+using EnemyClass;
 
 public class EnemyShipController : Ship
 {
@@ -9,14 +10,19 @@ public class EnemyShipController : Ship
 	[SerializeField] Transform _shipTransform;
 	[SerializeField] GameObject _attackPrefab;
 	[SerializeField] SpriteRenderer _sailSpriteRenderer, _shipSpriteRenderer;
+	[SerializeField] ParticleSystem particleSys;
 	[Space]
-	[Header("Player Settings")]
+	[Header("Ship Settings")]
 	[Space]
 	[Range(0, 100)]
 	[SerializeField] float _shipHealth;
 	[SerializeField] float _shipSpeed;
 	[SerializeField] float _rotationSpeed;
-	[SerializeField] int _sideTripleShootDelay;
+	[SerializeField] ShipStatus shipStatus;
+	[Space]
+	[Header("Enemy Settings")]
+	[Space]
+	[SerializeField] EnemyType enemyType;
 	[Space]
 	[Header("Attack Settings")]
 	[Space]
@@ -24,21 +30,26 @@ public class EnemyShipController : Ship
 	[SerializeField] float _attackSpeed;
 	[SerializeField] int _fowardattackRate;
 	[SerializeField] int _sideattackRate;
+
 	[Space]
 	[Header("Collision Settings")]
 	[Space]
 	[SerializeField] float _raycastRangeDetection;
 	[SerializeField] LayerMask raycastMask;
 
+	bool canAttackFoward = true, canAttackSideWays = true, hasDied;
+
 	void Start()
     {
-        
-    }
 
-    void Update()
-    {
-    }
-    public override void GetDamage(float amount)
+	}
+	private void Update()
+	{
+		ControlShipState();
+		ChangeShipSprites();
+	}
+
+	public override void GetDamage(float amount)
     {
 		_shipHealth -= amount;
 	}
@@ -46,9 +57,60 @@ public class EnemyShipController : Ship
 	{
 		return _shipHealth;
 	}
-	public override void Die()
+	void ControlShipState()
 	{
-		Instantiate(explosionPrefab,_shipTransform.position,Quaternion.identity);
+		if (_shipHealth >= 75 && _shipHealth <= 100)
+		{
+			shipStatus = ShipStatus.Normal;
+		}
+		else if (_shipHealth >= 35 && _shipHealth < 75)
+		{
+			shipStatus = ShipStatus.Damaged;
+		}
+		else if (_shipHealth >= 10 && _shipHealth < 35)
+		{
+			shipStatus = ShipStatus.Almost_Destroyed;
+		}
+		else
+		{
+			shipStatus = ShipStatus.Destroyed;
+		}
+	}
+	public void ChangeShipSprites()
+	{
+		switch (shipStatus)
+		{
+			case ShipStatus.Normal:
+				_shipSpriteRenderer.sprite = shipParts[0];
+				_sailSpriteRenderer.sprite = sailsParts[0];
+				break;
+			case ShipStatus.Damaged:
+				_shipSpriteRenderer.sprite = shipParts[1];
+				_sailSpriteRenderer.sprite = sailsParts[0];
+				break;
+			case ShipStatus.Almost_Destroyed:
+				_shipSpriteRenderer.sprite = shipParts[2];
+				_sailSpriteRenderer.sprite = sailsParts[1];
+				break;
+			case ShipStatus.Destroyed:
+				_shipSpriteRenderer.sprite = shipParts[3];
+				_sailSpriteRenderer.sprite = null;
+				Die();
+				break;
+		}
+	}
+	public void Die()
+	{
+		if (hasDied is false)
+		{
+			hasDied = true;
+			Explode();
+		}
+	}
+	async void Explode()
+	{
+		particleSys.Play();
+		await Task.Delay(5000);
 		Destroy(gameObject);
 	}
 }
