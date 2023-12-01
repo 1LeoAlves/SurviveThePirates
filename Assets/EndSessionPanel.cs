@@ -7,17 +7,17 @@ public class EndSessionPanel : MonoBehaviour
 {
     [SerializeField] TMP_Text scoreDisplay;
     [SerializeField] int _score;
-    void Start()
-    {
-        
-    }
-
-    void Update()
-    {
-        
-    }
-    public void SetScore(int score)
+	private void Update()
+	{
+		UpdateDisplay();
+	}
+	public void SetScore(int score)
     {
         _score = score;
 	}
+	void UpdateDisplay()
+	{
+		scoreDisplay.text = _score.ToString();
+	}
+	
 }

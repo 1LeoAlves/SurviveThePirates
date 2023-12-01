@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -31,8 +32,22 @@ public class SceneController : MonoBehaviour
 	}
     void SetConfig()
     {
-		_gameSessionTime = PlayerPrefs.GetFloat("GameSessionTime");
-		_enemySpawnRate = int.Parse(PlayerPrefs.GetFloat("EnemySpawnRate").ToString("F0"));
+        if (PlayerPrefs.GetFloat("GameSessionTime").IsUnityNull())
+        {
+            _gameSessionTime = 1;
+		}
+		else
+        {
+			_gameSessionTime = PlayerPrefs.GetFloat("GameSessionTime");
+		}
+		if (PlayerPrefs.GetFloat("GameSessionTime").IsUnityNull())
+		{
+			_enemySpawnRate = 15;
+		}
+		else
+		{
+			_enemySpawnRate = int.Parse(PlayerPrefs.GetFloat("EnemySpawnRate").ToString("F0"));
+		}
 		StartCoroutine(EnemySpawn());
 	}
     void ControlTime()
@@ -47,7 +62,11 @@ public class SceneController : MonoBehaviour
     }
 	IEnumerator EnemySpawn()
     {
-        yield return new WaitForSeconds(_enemySpawnRate);
+		if (isSessionPaused)
+		{
+			yield return null;
+		}
+		yield return new WaitForSeconds(_enemySpawnRate);
 
         int randomPos = UnityEngine.Random.Range(0, enemySpawnPositions.Count);
 		Instantiate(_enemyPrefab, enemySpawnPositions[randomPos], Quaternion.identity);
@@ -59,6 +78,10 @@ public class SceneController : MonoBehaviour
         {
 			yield return null;
         }
+        if (isSessionPaused)
+        {
+            yield return null;
+		}
         StartCoroutine(EnemySpawn());
         yield return null;
     }
@@ -72,8 +95,13 @@ public class SceneController : MonoBehaviour
 	}
     public void EndSession()
     {
+        Destroy(FindObjectOfType<EnemyShipController>());
 		_pausePanel.SetActive(true);
 		isSessionPaused = true;
 		_endSessionPanel.SetScore(_counterController.GetKills());
+        foreach(EnemyShipController ship in FindObjectsOfType<EnemyShipController>())
+        {
+            ship.Explode();
+        }
 	}
 }

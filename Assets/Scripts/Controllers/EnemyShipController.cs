@@ -219,12 +219,12 @@ public class EnemyShipController : Ship
 	}
 	void ExplodeItSelf(Ship shipToDamage)
 	{
-		Debug.Log(shipToDamage.name);
 		shipToDamage.GetDamage(_collisionDamage);
 		_shipHealth = 0;
 	}
-	void Explode()
+	public void Explode()
 	{
+		_shipHealth = 0;
 		particleSys.Play();
 		Destroy(gameObject,5);
 	}
