@@ -62,7 +62,7 @@ public class EnemyShipController : Ship
 	}
 	private void OnCollisionEnter2D(Collision2D coll)
 	{
-		if (enemyType.Equals(EnemyType.Chaser) && coll.gameObject.CompareTag("Player"))
+		if (enemyType.Equals(EnemyType.Chaser) && coll.gameObject.CompareTag("Player") && !hasDied)
 		{
 			hasKamikazed = true;
 			ExplodeItSelf(coll.collider.transform.parent.parent.GetComponent<PlayerController>());
