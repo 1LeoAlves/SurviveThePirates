@@ -8,6 +8,7 @@ using UnityEngine;
 
 public class PlayerController : Ship
 {
+	[SerializeField] SceneController sceneControllerRef;
 	[SerializeField] GameObject explosionPrefab;
 	[SerializeField] Transform _shipTransform;
 	[SerializeField] GameObject _attackPrefab, _tripleAttackPrefab;
@@ -21,6 +22,7 @@ public class PlayerController : Ship
 	[SerializeField] float _shipSpeed;
     [SerializeField] float _rotationSpeed;
 	[SerializeField] ShipStatus shipStatus;
+	[SerializeField] string _uniqueIDHash;
 	[Space]
     [Header("Attack Settings")]
     [Space]
@@ -36,7 +38,11 @@ public class PlayerController : Ship
 
     bool canAttackFoward = true, canAttackSideWays = true, hasDied;
 
-    void Update()
+	private void Start()
+	{
+		_uniqueIDHash = gameObject.GetHashCode().ToString();
+	}
+	void Update()
     {
         Movement();
         Rotate();
@@ -74,7 +80,7 @@ public class PlayerController : Ship
             _attackPrefab.hideFlags = HideFlags.HideInHierarchy;
 			GameObject CanonBomb = Instantiate(_attackPrefab,new Vector2(_shipTransform.position.x,_shipTransform.position.y), _shipTransform.rotation);
 			CanonBall canonball = CanonBomb.GetComponent<CanonBall>();
-			canonball.shiplauncherName = name;
+			canonball._shiplauncherHashID = _uniqueIDHash;
 			canonball.bombDamage = _attackDamage;
 
 			Rigidbody2D CanonBombRigid = CanonBomb.GetComponent<Rigidbody2D>();
@@ -95,7 +101,7 @@ public class PlayerController : Ship
 
 			foreach (CanonBall canonball in canonBalls)
 			{
-				canonball.shiplauncherName = name;
+				canonball._shiplauncherHashID = _uniqueIDHash;
 				canonball.bombDamage = _attackDamage;
 			}
 			TripleAttackGameObject = Instantiate(TripleAttackGameObject, transform.position, _shipTransform.rotation);
@@ -181,8 +187,9 @@ public class PlayerController : Ship
 	async void Explode()
 	{
 		particleSys.Play();
-		await Task.Delay(5000);
-		if(!gameObject.IsUnityNull())
+		await Task.Delay(2500);
+		sceneControllerRef.EndSession();
+		if (!gameObject.IsUnityNull())
 			Destroy(gameObject);
 	}
 }

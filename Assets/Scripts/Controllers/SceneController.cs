@@ -3,9 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class SceneController : MonoBehaviour
 {
+    [SerializeField] EndSessionPanel _endSessionPanel;
     [SerializeField] int _enemySpawnRate;
 	[SerializeField] float _gameSessionTime;
     [SerializeField] Stopwatch _stopwatch;
@@ -21,13 +23,17 @@ public class SceneController : MonoBehaviour
 
 	void Start()
     {
-		_gameSessionTime = PlayerPrefs.GetFloat("GameSessionTime");
-        _enemySpawnRate = int.Parse(PlayerPrefs.GetFloat("EnemySpawnRate").ToString("F0"));
-        StartCoroutine(EnemySpawn());
+        SetConfig();
 	}
 	private void Update()
 	{
 		ControlTime();
+	}
+    void SetConfig()
+    {
+		_gameSessionTime = PlayerPrefs.GetFloat("GameSessionTime");
+		_enemySpawnRate = int.Parse(PlayerPrefs.GetFloat("EnemySpawnRate").ToString("F0"));
+		StartCoroutine(EnemySpawn());
 	}
     void ControlTime()
     {
@@ -64,18 +70,10 @@ public class SceneController : MonoBehaviour
 	{
 		return seconds * 1000;
 	}
-    async void EndSession()
+    public void EndSession()
     {
-        if (_pausePanel.activeInHierarchy)
-        {
-			_pausePanel.SetActive(false);
-            isSessionPaused = false;
-		}
-        else
-        {
-			_pausePanel.SetActive(true);
-			isSessionPaused = true;
-		}
-		await Task.Delay(500);
+		_pausePanel.SetActive(true);
+		isSessionPaused = true;
+		_endSessionPanel.SetScore(_counterController.GetKills());
 	}
 }

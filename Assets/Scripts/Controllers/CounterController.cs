@@ -1,12 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public class CounterController : MonoBehaviour
 {
 	[SerializeField] TMP_Text _valueDisplay;
-    [SerializeField] float _value;
+    [SerializeField] int _value;
 	private void Update()
 	{
 		UpdateDisplay();
@@ -19,5 +20,9 @@ public class CounterController : MonoBehaviour
     {
 		_value += quantity;
     }
+	public int GetKills()
+	{
+		return _value;
+	}
 	
 }

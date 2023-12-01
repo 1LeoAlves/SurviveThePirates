@@ -5,7 +5,7 @@ using UnityEngine;
 public abstract class Ship : MonoBehaviour
 {
 	public List<Sprite> shipParts, sailsParts;
-    public virtual void GetDamage(float amount)
+	public virtual void GetDamage(float amount)
     {
 
     }

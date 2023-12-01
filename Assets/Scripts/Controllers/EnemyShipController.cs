@@ -25,9 +25,11 @@ public class EnemyShipController : Ship
 	[Header("Enemy Settings")]
 	[Space]
 	[SerializeField] EnemyType enemyType;
+	[SerializeField] string _uniqueIDHash;
 	[Space]
 	[Header("Attack Settings")]
 	[Space]
+	[SerializeField] int _collisionDamage;
 	[SerializeField] int _attackDamage;
 	[SerializeField] float _attackSpeed;
 	[SerializeField] int _fowardattackRate;
@@ -40,37 +42,30 @@ public class EnemyShipController : Ship
 	[SerializeField] LayerMask raycastMask;
 
 	
-	bool canAttackFoward = true, canAttackSideWays = true, hasDied;
+	bool canAttackFoward = true, hasDied, hasKamikazed;
 
 	void Start()
     {
+		enemyType = (EnemyType)Random.Range(0, 2);
 		_sceneControllerRef = FindObjectOfType<SceneController>();
+		_target = FindObjectOfType<PlayerController>().transform;
+		_uniqueIDHash = gameObject.GetHashCode().ToString();
 	}
 	private void Update()
 	{
-		Movement();
-		ControlShipState();
-		ChangeShipSprites();
-	}
-	private void OnTriggerEnter2D(Collider2D coll)
-	{
-		if (coll.CompareTag("Player"))
+		if(_target!= null)
 		{
-			_target = coll.transform;
-		}
-	}
-	private void OnTriggerExit2D(Collider2D coll)
-	{
-		if (coll.CompareTag("Player"))
-		{
-			_target = null;
+			Movement();
+			ControlShipState();
+			ChangeShipSprites();
 		}
 	}
 	private void OnCollisionEnter2D(Collision2D coll)
 	{
-		if (enemyType.Equals(EnemyType.Chaser))
+		if (enemyType.Equals(EnemyType.Chaser) && coll.gameObject.CompareTag("Player"))
 		{
-			ExplodeItSelf(coll.collider.GetComponent<Ship>());
+			hasKamikazed = true;
+			ExplodeItSelf(coll.collider.transform.parent.parent.GetComponent<PlayerController>());
 		}
 	}
 	void Movement()
@@ -80,16 +75,17 @@ public class EnemyShipController : Ship
 			switch (enemyType) 
 			{
 				case EnemyType.Shooter:
-					if (_target != null)
+					if(Vector2.Distance(_shipTransform.position, _target.position) < 10)
 					{
 						AimAndShoot();
 					}
-					break;
-				case EnemyType.Chaser:
-					if(_target != null)
+					else
 					{
 						ChasePlayer();
 					}
+					break;
+				case EnemyType.Chaser:
+					ChasePlayer();
 					break;
 			}
 		}
@@ -109,7 +105,7 @@ public class EnemyShipController : Ship
 				canAttackFoward = false;
 				GameObject CanonBomb = Instantiate(_attackPrefab, new Vector2(_shipTransform.position.x, _shipTransform.position.y), _shipTransform.rotation);
 				CanonBall canonball = CanonBomb.GetComponent<CanonBall>();
-				canonball.shiplauncherName = name;
+				canonball._shiplauncherHashID = _uniqueIDHash;
 				canonball.bombDamage = _attackDamage;
 
 				Rigidbody2D CanonBombRigid = CanonBomb.GetComponent<Rigidbody2D>();
@@ -134,7 +130,21 @@ public class EnemyShipController : Ship
 	void GoFoward()
 	{
 		Vector3 shipPosition = _shipTransform.position;
-		transform.position = shipPosition + (_shipTransform.up * _shipSpeed * Time.deltaTime);
+		if (enemyType.Equals(EnemyType.Chaser))
+		{
+			if(Vector2.Distance(_shipTransform.position, _target.position) <= 5f)
+			{
+				transform.position = shipPosition + (_shipTransform.up * (_shipSpeed * 2f) * Time.deltaTime);
+			}
+			else
+			{
+				transform.position = shipPosition + (_shipTransform.up * _shipSpeed * Time.deltaTime);
+			}
+		}
+		else
+		{
+			transform.position = shipPosition + (_shipTransform.up * _shipSpeed * Time.deltaTime);
+		}
 	}
 	public override void GetDamage(float amount)
     {
@@ -200,21 +210,22 @@ public class EnemyShipController : Ship
 		if (hasDied is false)
 		{
 			hasDied = true;
-			_sceneControllerRef.AddKillToCounter(1);
+			if (!hasKamikazed)
+			{
+				_sceneControllerRef.AddKillToCounter(1);
+			}
 			Explode();
 		}
 	}
 	void ExplodeItSelf(Ship shipToDamage)
 	{
-		if(!shipToDamage.IsUnityNull())
-			shipToDamage.GetComponent<Ship>().GetDamage(_attackDamage);
-		hasDied = true;
+		Debug.Log(shipToDamage.name);
+		shipToDamage.GetDamage(_collisionDamage);
 		_shipHealth = 0;
 	}
-	async void Explode()
+	void Explode()
 	{
 		particleSys.Play();
-		await Task.Delay(5000);
-		Destroy(gameObject);
+		Destroy(gameObject,5);
 	}
 }

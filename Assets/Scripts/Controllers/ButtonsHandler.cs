@@ -7,7 +7,8 @@ using TMPro;
 
 public class ButtonsHandler : MonoBehaviour
 {
-    [SerializeField] Transform _canvasTransformReference;
+	[SerializeField] SceneController sceneControllerRef;
+	[SerializeField] Transform _canvasTransformReference;
     [SerializeField] GameObject _faderOutObject;
 	[SerializeField] GameObject _faderInObject;
 	[SerializeField] List<TMP_InputField> inputFields;
